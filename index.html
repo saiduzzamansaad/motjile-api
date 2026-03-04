@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WooCommerce Orders Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: sans-serif; padding: 10px; }
+        h2 { text-align: center; }
+        .order { border: 1px solid #ddd; margin: 10px 0; padding: 10px; }
+        .items { margin-left: 20px; }
+        .btn { background: #4CAF50; color: white; border: none; padding: 5px 10px; cursor: pointer; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<h2>WooCommerce Orders Dashboard</h2>
+<div id="ordersContainer"></div>
+
+<script>
+const STORE = "https://motijheeluk.com/"; // আপনার WooCommerce site
+const CK = "ck_5581665826f7c6d3597d10c4c9d7f37c14bb294b";
+const CS = "cs_5c22eb42bf019e21098696ef7634eb3123909caa";
+
+async function fetchOrders() {
+    const res = await fetch(`${STORE}/wp-json/wc/v3/orders?per_page=20&status=processing`, {
+        headers: {
+            'Authorization': 'Basic ' + btoa(CK + ":" + CS)
+        }
+    });
+    const data = await res.json();
+    displayOrders(data);
+}
+
+function displayOrders(orders){
+    const container = document.getElementById("ordersContainer");
+    container.innerHTML = "";
+    
+    orders.forEach(order => {
+        const div = document.createElement("div");
+        div.className = "order";
+        
+        let html = `<strong>Order #${order.id}</strong><br>`;
+        html += `Name: ${order.billing.first_name} ${order.billing.last_name}<br>`;
+        html += `Phone: ${order.billing.phone}<br>`;
+        html += `Email: ${order.billing.email}<br>`;
+        html += `Address: ${order.billing.address_1}, ${order.billing.city}, ${order.billing.country}<br>`;
+        html += `Total: ${order.total}<br>`;
+        html += `<strong>Items:</strong><div class="items">`;
+        order.line_items.forEach(item => {
+            html += `${item.name} x ${item.quantity}<br>`;
+        });
+        html += "</div>";
+
+        html += `<button class="btn" onclick="printOrder(${order.id})">Print This Order</button>`;
+
+        div.innerHTML = html;
+        container.appendChild(div);
+    });
+}
+
+// RawBT print function
+async function printOrder(orderId){
+    const res = await fetch(`${STORE}/wp-json/wc/v3/orders/${orderId}`, {
+        headers: { 'Authorization': 'Basic ' + btoa(CK + ":" + CS) }
+    });
+    const order = await res.json();
+
+    let text = `Order #${order.id}\n`;
+    text += `-------------------\n`;
+    text += `Name: ${order.billing.first_name} ${order.billing.last_name}\n`;
+    text += `Phone: ${order.billing.phone}\n`;
+    text += `Address: ${order.billing.address_1}, ${order.billing.city}, ${order.billing.country}\n`;
+    text += `-------------------\nItems:\n`;
+    order.line_items.forEach(item => {
+        text += `${item.name} x ${item.quantity}\n`;
+    });
+    text += `-------------------\nTotal: ${order.total}\n\n\n`;
+
+    // Trigger RawBT print
+    window.location.href = "rawbt:print?text=" + encodeURIComponent(text);
+}
+
+// Auto refresh every 10 seconds
+setInterval(fetchOrders, 10000);
+fetchOrders();
+</script>
+
+</body>
+</html>
