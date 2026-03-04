@@ -17,19 +17,16 @@
 <div id="ordersContainer"></div>
 
 <script>
-const STORE = "https://motijheeluk.com/"; // আপনার WooCommerce site
+const STORE = "https://motijheeluk.com"; // no trailing slash
+const res = await fetch(`${STORE}/wp-json/wc/v3/orders?per_page=20&status=processing`, {
+    headers: {
+        'Authorization': 'Basic ' + btoa(CK + ":" + CS)
+    }
+});
 const CK = "ck_5581665826f7c6d3597d10c4c9d7f37c14bb294b";
 const CS = "cs_5c22eb42bf019e21098696ef7634eb3123909caa";
 
-async function fetchOrders() {
-    const res = await fetch(`${STORE}/wp-json/wc/v3/orders?per_page=20&status=processing`, {
-        headers: {
-            'Authorization': 'Basic ' + btoa(CK + ":" + CS)
-        }
-    });
-    const data = await res.json();
-    displayOrders(data);
-}
+
 
 function displayOrders(orders){
     const container = document.getElementById("ordersContainer");
