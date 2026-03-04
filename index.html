@@ -1,37 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>WooCommerce Orders Dashboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body { font-family: sans-serif; padding: 10px; }
-        h2 { text-align: center; }
-        .order { border: 1px solid #ddd; margin: 10px 0; padding: 10px; }
-        .items { margin-left: 20px; }
-        .btn { background: #4CAF50; color: white; border: none; padding: 5px 10px; cursor: pointer; margin-top: 5px; }
-    </style>
+  <title>Advanced WooCommerce Orders</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: sans-serif; padding: 10px; max-width: 800px; margin: auto; }
+    h2 { text-align: center; margin-bottom: 20px; }
+    .order { border: 1px solid #ddd; padding: 10px; margin-bottom: 15px; border-radius: 8px; background: #f9f9f9; }
+    .items { margin-left: 20px; }
+    .btn { background: #4CAF50; color: white; border: none; padding: 5px 10px; cursor: pointer; margin-top: 5px; border-radius: 5px; }
+    .search { width: 100%; padding: 5px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc; }
+    .highlight { background: #fff3cd; }
+  </style>
 </head>
 <body>
 
-<h2>WooCommerce Orders Dashboard</h2>
+<h2>Advanced WooCommerce Orders Dashboard</h2>
+
+<input type="text" id="searchInput" class="search" placeholder="Search by Order ID or Customer Name">
+
 <div id="ordersContainer"></div>
 
 <script>
+let ordersData = [];
+
 async function fetchOrders() {
     try {
         const res = await fetch("https://proxy1121.netlify.app/");
         const orders = await res.json();
-        displayOrders(orders);
-    } catch (err) {
+        ordersData = orders; // save globally
+        displayOrders(ordersData);
+    } catch(err) {
         console.error("Failed to fetch orders:", err);
     }
 }
 
 function displayOrders(orders) {
     const container = document.getElementById("ordersContainer");
+    const searchText = document.getElementById("searchInput").value.toLowerCase();
     container.innerHTML = "";
 
-    orders.forEach(order => {
+    orders
+        .filter(order => 
+            order.id.toString().includes(searchText) ||
+            (order.billing.first_name + " " + order.billing.last_name).toLowerCase().includes(searchText)
+        )
+        .forEach(order => {
         const div = document.createElement("div");
         div.className = "order";
 
@@ -46,22 +60,19 @@ function displayOrders(orders) {
             html += `${item.name} x ${item.quantity}<br>`;
         });
         html += "</div>";
-
-        html += `<button class="btn" onclick="printOrder(${order.id})">Print This Order</button>`;
+        html += `<button class="btn" onclick="printOrder(${order.id})">Print</button>`;
 
         div.innerHTML = html;
         container.appendChild(div);
     });
 }
 
-// RawBT print function
 async function printOrder(orderId) {
     try {
-        const res = await fetch(`https://motijheeluk.com/proxy.php?order_id=${orderId}`);
+        const res = await fetch(`https://your-vercel-project.vercel.app/api/proxy?order_id=${orderId}`);
         const order = await res.json();
 
-        let text = `Order #${order.id}\n`;
-        text += `-------------------\n`;
+        let text = `Order #${order.id}\n-------------------\n`;
         text += `Name: ${order.billing.first_name} ${order.billing.last_name}\n`;
         text += `Phone: ${order.billing.phone}\n`;
         text += `Address: ${order.billing.address_1}, ${order.billing.city}, ${order.billing.country}\n`;
@@ -69,18 +80,21 @@ async function printOrder(orderId) {
         order.line_items.forEach(item => {
             text += `${item.name} x ${item.quantity}\n`;
         });
-        text += `-------------------\nTotal: ${order.total}\n\n\n`;
+        text += `-------------------\nTotal: ${order.total}\n\n`;
 
-        // Trigger RawBT print
+        // RawBT Print
         window.location.href = "rawbt:print?text=" + encodeURIComponent(text);
-    } catch (err) {
+    } catch(err) {
         console.error("Failed to print order:", err);
     }
 }
 
-// Auto refresh every 10 seconds
+// Auto refresh every 10s
 setInterval(fetchOrders, 10000);
 fetchOrders();
+
+// Search input
+document.getElementById("searchInput").addEventListener("input", () => displayOrders(ordersData));
 </script>
 
 </body>
