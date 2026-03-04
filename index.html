@@ -17,25 +17,24 @@
 <div id="ordersContainer"></div>
 
 <script>
-const STORE = "https://motijheeluk.com"; // no trailing slash
-const res = await fetch(`${STORE}/wp-json/wc/v3/orders?per_page=20&status=processing`, {
-    headers: {
-        'Authorization': 'Basic ' + btoa(CK + ":" + CS)
+async function fetchOrders() {
+    try {
+        const res = await fetch("https://proxy1121.netlify.app/");
+        const orders = await res.json();
+        displayOrders(orders);
+    } catch (err) {
+        console.error("Failed to fetch orders:", err);
     }
-});
-const CK = "ck_5581665826f7c6d3597d10c4c9d7f37c14bb294b";
-const CS = "cs_5c22eb42bf019e21098696ef7634eb3123909caa";
+}
 
-
-
-function displayOrders(orders){
+function displayOrders(orders) {
     const container = document.getElementById("ordersContainer");
     container.innerHTML = "";
-    
+
     orders.forEach(order => {
         const div = document.createElement("div");
         div.className = "order";
-        
+
         let html = `<strong>Order #${order.id}</strong><br>`;
         html += `Name: ${order.billing.first_name} ${order.billing.last_name}<br>`;
         html += `Phone: ${order.billing.phone}<br>`;
@@ -56,25 +55,27 @@ function displayOrders(orders){
 }
 
 // RawBT print function
-async function printOrder(orderId){
-    const res = await fetch(`${STORE}/wp-json/wc/v3/orders/${orderId}`, {
-        headers: { 'Authorization': 'Basic ' + btoa(CK + ":" + CS) }
-    });
-    const order = await res.json();
+async function printOrder(orderId) {
+    try {
+        const res = await fetch(`https://motijheeluk.com/proxy.php?order_id=${orderId}`);
+        const order = await res.json();
 
-    let text = `Order #${order.id}\n`;
-    text += `-------------------\n`;
-    text += `Name: ${order.billing.first_name} ${order.billing.last_name}\n`;
-    text += `Phone: ${order.billing.phone}\n`;
-    text += `Address: ${order.billing.address_1}, ${order.billing.city}, ${order.billing.country}\n`;
-    text += `-------------------\nItems:\n`;
-    order.line_items.forEach(item => {
-        text += `${item.name} x ${item.quantity}\n`;
-    });
-    text += `-------------------\nTotal: ${order.total}\n\n\n`;
+        let text = `Order #${order.id}\n`;
+        text += `-------------------\n`;
+        text += `Name: ${order.billing.first_name} ${order.billing.last_name}\n`;
+        text += `Phone: ${order.billing.phone}\n`;
+        text += `Address: ${order.billing.address_1}, ${order.billing.city}, ${order.billing.country}\n`;
+        text += `-------------------\nItems:\n`;
+        order.line_items.forEach(item => {
+            text += `${item.name} x ${item.quantity}\n`;
+        });
+        text += `-------------------\nTotal: ${order.total}\n\n\n`;
 
-    // Trigger RawBT print
-    window.location.href = "rawbt:print?text=" + encodeURIComponent(text);
+        // Trigger RawBT print
+        window.location.href = "rawbt:print?text=" + encodeURIComponent(text);
+    } catch (err) {
+        console.error("Failed to print order:", err);
+    }
 }
 
 // Auto refresh every 10 seconds
