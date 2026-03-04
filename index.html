@@ -26,7 +26,7 @@ let ordersData = [];
 
 async function fetchOrders() {
     try {
-        const res = await fetch("https://proxy1121.netlify.app/");
+        const res = await fetch("motjile-api-proxy.vercel.app");
         const orders = await res.json();
         ordersData = orders; // save globally
         displayOrders(ordersData);
